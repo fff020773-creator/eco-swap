@@ -1,122 +1,90 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function Screen({ children }) {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div style={{ padding: 24, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
+      {children}
+    </div>
   )
 }
 
-export default App
+function Field({ label, type = 'text', placeholder }) {
+  return (
+    <label style={{ display: 'block', fontSize: 12, color: 'var(--muted)', letterSpacing: 1 }}>
+      {label}
+      <input
+        type={type}
+        placeholder={placeholder}
+        style={{ display: 'block', width: '100%', minHeight: 48, marginTop: 6, padding: '0 14px', border: '1px solid var(--border)', borderRadius: 12, fontSize: 16, background: 'var(--card)' }}
+      />
+    </label>
+  )
+}
+
+function Link({ onClick, children }) {
+  return (
+    <button onClick={onClick} style={{ background: 'none', border: 'none', color: 'var(--green)', fontSize: 15, minHeight: 44, cursor: 'pointer' }}>
+      {children}
+    </button>
+  )
+}
+
+export default function App() {
+  const [screen, setScreen] = useState('welcome')
+
+  if (screen === 'welcome') {
+    return (
+      <Screen>
+        <h1 style={{ color: 'var(--green)', margin: 0 }}>eco-swap</h1>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>Small steps, big impact</p>
+        <h2 style={{ margin: '24px 0 0' }}>Make every choice count</h2>
+        <p style={{ color: 'var(--muted)' }}>Swap habits, save resources, and grow a greener community.</p>
+        <button className="btn" onClick={() => setScreen('create')}>Create account</button>
+        <button className="btn btn-light" onClick={() => setScreen('signin')}>I already have an account</button>
+        <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>By continuing, you agree to our Terms & Privacy Policy.</p>
+      </Screen>
+    )
+  }
+
+  if (screen === 'signin') {
+    return (
+      <Screen>
+        <h1 style={{ color: 'var(--green)', margin: 0 }}>eco-swap</h1>
+        <h2 style={{ margin: 0 }}>Welcome back</h2>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>Sign in to continue your eco journey.</p>
+        <Field label="EMAIL ADDRESS" type="email" placeholder="you@example.com" />
+        <Field label="PASSWORD" type="password" placeholder="Enter your password" />
+        <Link onClick={() => setScreen('forgot')}>Forgot password?</Link>
+        <button className="btn">Sign in</button>
+        <Link onClick={() => setScreen('create')}>Don't have an account? Create one</Link>
+      </Screen>
+    )
+  }
+
+  if (screen === 'create') {
+    return (
+      <Screen>
+        <h1 style={{ color: 'var(--green)', margin: 0 }}>eco-swap</h1>
+        <h2 style={{ margin: 0 }}>Create your account</h2>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>Join the Eco-Swap community.</p>
+        <Field label="FULL NAME" placeholder="Your name" />
+        <Field label="EMAIL ADDRESS" type="email" placeholder="you@example.com" />
+        <Field label="PASSWORD" type="password" placeholder="Create a password" />
+        <button className="btn">Create account</button>
+        <Link onClick={() => setScreen('signin')}>Already have an account? Sign in</Link>
+        <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>Your details stay private and secure.</p>
+      </Screen>
+    )
+  }
+
+  return (
+    <Screen>
+      <Link onClick={() => setScreen('signin')}>← Back to sign in</Link>
+      <h2 style={{ margin: 0 }}>Forgot your password?</h2>
+      <p style={{ margin: 0, color: 'var(--muted)' }}>Enter your email and we'll send you a reset link.</p>
+      <Field label="EMAIL ADDRESS" type="email" placeholder="you@example.com" />
+      <button className="btn">Send reset link</button>
+      <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>Didn't receive an email? Check your spam folder.</p>
+    </Screen>
+  )
+}
