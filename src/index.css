@@ -41,3 +41,54 @@ body {
   color: var(--green);
   border: 1px solid var(--green);
 }
+html.high-contrast-mode {
+  --bg: #000000;
+  --text: #ffffff;
+  --text-h: #ffffff;
+  --border: #ffff00;
+  --code-bg: #141414;
+  --accent: #ffff00;
+  --accent-bg: #1f1f1f;
+  --accent-border: #ffff00;
+  --social-bg: #141414;
+}
+
+html.high-contrast-mode body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+html.high-contrast-mode button,
+html.high-contrast-mode a,
+html.high-contrast-mode input,
+html.high-contrast-mode select,
+html.high-contrast-mode textarea {
+  border-color: #ffff00 !important;
+}
+
+.adaptive-hud {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 9999;
+  background: var(--bg);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.adaptive-hud button {
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 13px;
+}
