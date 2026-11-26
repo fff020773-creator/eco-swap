@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import './style.css';
 
 export default function AdaptiveSwapForm({
   onPublish = () => {},
@@ -8,12 +9,15 @@ export default function AdaptiveSwapForm({
     title: '',
     description: ''
   });
+
   const [photo, setPhoto] = useState(null);
+
   const [attempts, setAttempts] = useState({
     title: 0,
     description: 0,
     photo: 0
   });
+
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(true);
@@ -104,6 +108,7 @@ export default function AdaptiveSwapForm({
       </header>
 
       <h1>Swap an item</h1>
+
       <p className="intro">
         Give your item a new home 🌿
       </p>
@@ -149,7 +154,11 @@ export default function AdaptiveSwapForm({
         />
 
         {errors.title && (
-          <p className="error" id="title-error" role="alert">
+          <p
+            className="error"
+            id="title-error"
+            role="alert"
+          >
             {errors.title}
           </p>
         )}
@@ -178,7 +187,11 @@ export default function AdaptiveSwapForm({
         />
 
         {errors.description && (
-          <p className="error" id="description-error" role="alert">
+          <p
+            className="error"
+            id="description-error"
+            role="alert"
+          >
             {errors.description}
           </p>
         )}
@@ -210,11 +223,17 @@ export default function AdaptiveSwapForm({
         />
 
         {photo && (
-          <p className="tip">Selected: {photo.name}</p>
+          <p className="tip">
+            Selected: {photo.name}
+          </p>
         )}
 
         {errors.photo && (
-          <p className="error" id="photo-error" role="alert">
+          <p
+            className="error"
+            id="photo-error"
+            role="alert"
+          >
             {errors.photo}
           </p>
         )}
@@ -243,11 +262,18 @@ export default function AdaptiveSwapForm({
           </section>
         )}
 
-        <button className="primary" type="submit">
+        <button
+          className="primary"
+          type="submit"
+        >
           Review listing
         </button>
 
-        <p className="status" role="status" aria-live="polite">
+        <p
+          className="status"
+          role="status"
+          aria-live="polite"
+        >
           {status}
         </p>
       </form>
