@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAdaptiveUX } from './useAdaptiveUX'
+import MainApp from './MainApp'
 
 function Screen({ children }) {
   return (
@@ -10,14 +11,35 @@ function Screen({ children }) {
 }
 
 function Field({ label, type = 'text', placeholder }) {
+  const englishOnly = type === 'email' || type === 'password'
+  const [value, setValue] = useState('')
+  const [warn, setWarn] = useState(false)
+
+  function handleChange(e) {
+    const raw = e.target.value
+    if (englishOnly) {
+      const clean = raw.replace(/[^\x20-\x7E]/g, '')
+      setWarn(clean !== raw)
+      setValue(clean)
+    } else {
+      setValue(raw)
+    }
+  }
+
   return (
     <label style={{ display: 'block', fontSize: 12, color: 'var(--muted)', letterSpacing: 1 }}>
       {label}
       <input
         type={type}
+        value={value}
+        onChange={handleChange}
+        dir={englishOnly ? 'ltr' : undefined}
         placeholder={placeholder}
         style={{ display: 'block', width: '100%', minHeight: 48, marginTop: 6, padding: '0 14px', border: '1px solid var(--border)', borderRadius: 12, fontSize: 16, background: 'var(--card)' }}
       />
+      {warn && (
+        <span role="alert" style={{ color: '#b3261e', fontSize: 12 }}>English characters only</span>
+      )}
     </label>
   )
 }
@@ -53,6 +75,15 @@ export default function App() {
     </div>
   )
 
+  if (screen === 'app') {
+    return (
+      <>
+        <MainApp onSignOut={() => setScreen('welcome')} />
+        {hud}
+      </>
+    )
+  }
+
   if (screen === 'welcome') {
     return (
       <>
@@ -80,7 +111,7 @@ export default function App() {
           <Field label="EMAIL ADDRESS" type="email" placeholder="you@example.com" />
           <Field label="PASSWORD" type="password" placeholder="Enter your password" />
           <Link onClick={() => setScreen('forgot')}>Forgot password?</Link>
-          <button className="btn">Sign in</button>
+          <button className="btn" onClick={() => setScreen('app')}>Sign in</button>
           <Link onClick={() => setScreen('create')}>Don't have an account? Create one</Link>
         </Screen>
         {hud}
@@ -98,7 +129,7 @@ export default function App() {
           <Field label="FULL NAME" placeholder="Your name" />
           <Field label="EMAIL ADDRESS" type="email" placeholder="you@example.com" />
           <Field label="PASSWORD" type="password" placeholder="Create a password" />
-          <button className="btn">Create account</button>
+          <button className="btn" onClick={() => setScreen('app')}>Create account</button>
           <Link onClick={() => setScreen('signin')}>Already have an account? Sign in</Link>
           <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>Your details stay private and secure.</p>
         </Screen>
