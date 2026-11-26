@@ -4,8 +4,11 @@
   --bg: #f2f6ee;
   --card: #ffffff;
   --text: #1b2b22;
+  --text-h: #1b2b22;
   --muted: #6b7f73;
   --border: #dfe8dc;
+  --accent-bg: #f2f6ee;
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
 * { box-sizing: border-box; }
@@ -21,7 +24,9 @@ body {
   max-width: 420px;
   min-height: 100vh;
   margin: 0 auto;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cpath d='M18 56c0-16 9-27 25-29 0 16-9 27-25 29z' fill='%231f6b4a' fill-opacity='0.08'/%3E%3Cpath d='M60 26c0-9 6-16 15-17 0 9-6 16-15 17z' fill='%231f6b4a' fill-opacity='0.07'/%3E%3Ccircle cx='66' cy='68' r='3.5' fill='%231f6b4a' fill-opacity='0.07'/%3E%3C/svg%3E");
+  background-size: 90px 90px;
 }
 
 .btn {
@@ -41,34 +46,43 @@ body {
   color: var(--green);
   border: 1px solid var(--green);
 }
+
+/* ===== High Contrast: وضع غامق بنفس التصميم =====
+   نجهز ألوان عالية التباين، وبعدين نقلب الصفحة كلها (تصير غامقة) */
 html.high-contrast-mode {
-  --bg: #000000;
-  --text: #ffffff;
-  --text-h: #ffffff;
-  --border: #ffff00;
-  --code-bg: #141414;
-  --accent: #ffff00;
-  --accent-bg: #1f1f1f;
-  --accent-border: #ffff00;
-  --social-bg: #141414;
+  --green: #0b4a2e;
+  --green-dark: #07331f;
+  --bg: #f2f6ee;
+  --card: #ffffff;
+  --text: #000000;
+  --text-h: #000000;
+  --muted: #1a1a1a;
+  --border: #000000;
+  --accent-bg: #ffffff;
+  --shadow: none;
+  filter: invert(1) hue-rotate(180deg);
 }
 
-html.high-contrast-mode body {
-  background-color: #000000;
-  color: #ffffff;
+html.high-contrast-mode img,
+html.high-contrast-mode video {
+  filter: invert(1) hue-rotate(180deg);
 }
 
 html.high-contrast-mode button,
-html.high-contrast-mode a,
 html.high-contrast-mode input,
 html.high-contrast-mode select,
 html.high-contrast-mode textarea {
-  border-color: #ffff00 !important;
+  border: 2px solid #000000 !important;
 }
 
+html.high-contrast-mode input::placeholder {
+  color: #333333;
+}
+
+/* ===== شريط Adaptive UX (فوق القائمة السفلية) ===== */
 .adaptive-hud {
   position: fixed;
-  bottom: 16px;
+  bottom: 80px;
   right: 16px;
   z-index: 9999;
   background: var(--bg);
