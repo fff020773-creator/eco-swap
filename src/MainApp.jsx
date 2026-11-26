@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AdaptiveSwapForm from '../AdaptiveSwapForm'
 
 const CHALLENGES = [
   { id: 1, icon: '♻️', title: 'No Plastic Day', desc: 'Avoid single-use plastic today', pts: 120 },
@@ -17,15 +18,36 @@ const REWARDS = [
 
 const TABS = [
   { id: 'home', label: 'Home', icon: '⌂' },
+  { id: 'swap', label: 'Swap', icon: '♻️' },
   { id: 'challenges', label: 'Challenges', icon: '✓' },
   { id: 'impact', label: 'Impact', icon: '◔' },
   { id: 'rewards', label: 'Rewards', icon: '★' },
   { id: 'profile', label: 'Profile', icon: '☺' },
 ]
 
-const card = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }
-const hero = { background: 'var(--green)', color: '#fff', borderRadius: 16, padding: 18 }
-const smallBtn = { minHeight: 36, padding: '0 14px', border: 'none', borderRadius: 10, background: 'var(--green)', color: '#fff', cursor: 'pointer' }
+const card = {
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 14,
+  padding: 14
+}
+
+const hero = {
+  background: 'var(--green)',
+  color: '#fff',
+  borderRadius: 16,
+  padding: 18
+}
+
+const smallBtn = {
+  minHeight: 36,
+  padding: '0 14px',
+  border: 'none',
+  borderRadius: 10,
+  background: 'var(--green)',
+  color: '#fff',
+  cursor: 'pointer'
+}
 
 function Header({ title, sub }) {
   return (
@@ -37,19 +59,23 @@ function Header({ title, sub }) {
   )
 }
 
-export default function MainApp({ onSignOut }) {
+export default function MainApp({ onSignOut, logFriction }) {
   const [tab, setTab] = useState('home')
   const [status, setStatus] = useState({})
   const [points, setPoints] = useState(1240)
   const [redeemed, setRedeemed] = useState([])
+  const [listing, setListing] = useState(null)
+  const [published, setPublished] = useState(false)
 
   const done = CHALLENGES.filter((c) => status[c.id] === 'done').length
   const score = Math.min(100, 78 + done * 2)
 
   function advance(c) {
     const s = status[c.id]
-    if (!s) setStatus({ ...status, [c.id]: 'progress' })
-    else if (s === 'progress') {
+
+    if (!s) {
+      setStatus({ ...status, [c.id]: 'progress' })
+    } else if (s === 'progress') {
       setStatus({ ...status, [c.id]: 'done' })
       setPoints(points + c.pts)
     }
@@ -62,42 +88,174 @@ export default function MainApp({ onSignOut }) {
     }
   }
 
+  function startSwap() {
+    setListing(null)
+    setPublished(false)
+    setTab('swap')
+  }
+
   let content
-  if (tab === 'home') {
+
+  if (tab === 'swap') {
     content = (
       <>
-        <Header title="Good morning, Ghala" sub="Small steps, big impact" />
+        <button
+          style={smallBtn}
+          onClick={() => setTab('home')}
+        >
+          Back to Home
+        </button>
+
+        {published ? (
+          <div style={{ ...card, marginTop: 14 }} role="status">
+            <h2>Listing published!</h2>
+            <p>Your item has been added to this demo session.</p>
+            <p>Thank you for making a sustainable choice.</p>
+            <button style={smallBtn} onClick={startSwap}>
+              Swap another item
+            </button>
+          </div>
+        ) : (
+          <>
+            <div hidden={!!listing}>
+              <AdaptiveSwapForm
+                onError={(error) => {
+                  logFriction?.(
+                    `Swap validation: ${error.field} - ${error.reason} (Attempt ${error.count})`,
+                    0
+                  )
+                }}
+                onPublish={(data) => setListing(data)}
+              />
+            </div>
+
+            {listing && (
+              <div style={{ ...card, marginTop: 14 }}>
+                <h2>Review your listing</h2>
+                <p><strong>Item:</strong> {listing.title}</p>
+                <p><strong>Description:</strong> {listing.description}</p>
+                <p><strong>Condition:</strong> {listing.condition}</p>
+                <p><strong>Photo:</strong> {listing.photo?.name}</p>
+
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button
+                    style={smallBtn}
+                    onClick={() => setListing(null)}
+                  >
+                    Edit details
+                  </button>
+
+                  <button
+                    style={smallBtn}
+                    onClick={() => setPublished(true)}
+                  >
+                    Publish listing
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </>
+    )
+
+  } else if (tab === 'home') {
+    content = (
+      <>
+        <Header
+          title="Good morning, Ghala"
+          sub="Small steps, big impact"
+        />
+
         <div style={hero}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>YOUR IMPACT SCORE</div>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>{score} / 100</div>
-          <div style={{ fontSize: 13 }}>{done} challenge(s) completed today</div>
+          <div style={{ fontSize: 12, opacity: 0.8 }}>
+            YOUR IMPACT SCORE
+          </div>
+
+          <div style={{ fontSize: 40, fontWeight: 700 }}>
+            {score} / 100
+          </div>
+
+          <div style={{ fontSize: 13 }}>
+            {done} challenge(s) completed today
+          </div>
         </div>
+
         <div style={{ ...card, marginTop: 14 }}>
-          <div style={{ fontWeight: 600 }}>Today's challenge</div>
-          <div style={{ color: 'var(--muted)', fontSize: 14, margin: '4px 0 10px' }}>No Plastic Day · +120 pts</div>
-          <button style={smallBtn} onClick={() => setTab('challenges')}>View challenges</button>
+          <div style={{ fontWeight: 600 }}>
+            Today's challenge
+          </div>
+
+          <div style={{ color: 'var(--muted)', fontSize: 14, margin: '4px 0 10px' }}>
+            No Plastic Day · +120 pts
+          </div>
+
+          <button
+            style={smallBtn}
+            onClick={() => setTab('challenges')}
+          >
+            View challenges
+          </button>
         </div>
+
         <div style={{ ...card, marginTop: 14 }}>
-          <div style={{ fontWeight: 600 }}>Reward points</div>
-          <div style={{ fontSize: 24, color: 'var(--green)' }}>{points}</div>
+          <div style={{ fontWeight: 600 }}>
+            Swap an item
+          </div>
+
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>
+            Give your unused items a new home.
+          </p>
+
+          <button style={smallBtn} onClick={startSwap}>
+            Create a listing
+          </button>
+        </div>
+
+        <div style={{ ...card, marginTop: 14 }}>
+          <div style={{ fontWeight: 600 }}>
+            Reward points
+          </div>
+
+          <div style={{ fontSize: 24, color: 'var(--green)' }}>
+            {points}
+          </div>
         </div>
       </>
     )
+
   } else if (tab === 'challenges') {
     content = (
       <>
-        <Header title="Challenges" sub="Choose a challenge and earn points" />
+        <Header
+          title="Challenges"
+          sub="Choose a challenge and earn points"
+        />
+
         <div style={{ display: 'grid', gap: 10 }}>
           {CHALLENGES.map((c) => {
             const s = status[c.id]
+
             return (
-              <div key={c.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div
+                key={c.id}
+                style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}
+              >
                 <div style={{ fontSize: 26 }}>{c.icon}</div>
+
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600 }}>{c.title}</div>
-                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>{c.desc} · +{c.pts} pts</div>
+
+                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>
+                    {c.desc} · +{c.pts} pts
+                  </div>
                 </div>
-                <button style={{ ...smallBtn, opacity: s === 'done' ? 0.5 : 1 }} disabled={s === 'done'} onClick={() => advance(c)}>
+
+                <button
+                  style={{ ...smallBtn, opacity: s === 'done' ? 0.5 : 1 }}
+                  disabled={s === 'done'}
+                  onClick={() => advance(c)}
+                >
                   {!s ? 'Start' : s === 'progress' ? 'Complete' : 'Done'}
                 </button>
               </div>
@@ -106,50 +264,106 @@ export default function MainApp({ onSignOut }) {
         </div>
       </>
     )
+
   } else if (tab === 'impact') {
     const bars = [40, 55, 45, 70, 60, 80, score]
-    const cats = [['Food', 70], ['Energy', 55], ['Water', 40], ['Transport', 30]]
+
+    const cats = [
+      ['Food', 70],
+      ['Energy', 55],
+      ['Water', 40],
+      ['Transport', 30]
+    ]
+
     content = (
       <>
-        <Header title="Your impact" sub="See the difference you are making" />
+        <Header
+          title="Your impact"
+          sub="See the difference you are making"
+        />
+
         <div style={hero}>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>{score} / 100</div>
+          <div style={{ fontSize: 40, fontWeight: 700 }}>
+            {score} / 100
+          </div>
         </div>
+
         <div style={{ ...card, marginTop: 14, display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
           {bars.map((h, i) => (
-            <div key={i} style={{ flex: 1, height: h + '%', background: 'var(--green)', borderRadius: 6 }} />
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: h + '%',
+                background: 'var(--green)',
+                borderRadius: 6
+              }}
+            />
           ))}
         </div>
+
         <div style={{ ...card, marginTop: 14 }}>
           {cats.map(([name, v]) => (
             <div key={name} style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 13 }}>{name} · {v}%</div>
+              <div style={{ fontSize: 13 }}>
+                {name} · {v}%
+              </div>
+
               <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
-                <div style={{ width: v + '%', height: 8, borderRadius: 6, background: 'var(--green)' }} />
+                <div
+                  style={{
+                    width: v + '%',
+                    height: 8,
+                    borderRadius: 6,
+                    background: 'var(--green)'
+                  }}
+                />
               </div>
             </div>
           ))}
         </div>
       </>
     )
+
   } else if (tab === 'rewards') {
     content = (
       <>
-        <Header title="Rewards" sub="Use your points on real eco rewards" />
+        <Header
+          title="Rewards"
+          sub="Use your points on real eco rewards"
+        />
+
         <div style={hero}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>AVAILABLE POINTS</div>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>{points}</div>
+          <div style={{ fontSize: 12, opacity: 0.8 }}>
+            AVAILABLE POINTS
+          </div>
+
+          <div style={{ fontSize: 40, fontWeight: 700 }}>
+            {points}
+          </div>
         </div>
+
         <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
           {REWARDS.map((r) => (
-            <div key={r.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              key={r.id}
+              style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}
+            >
               <div style={{ fontSize: 26 }}>{r.icon}</div>
+
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600 }}>{r.title}</div>
-                <div style={{ fontSize: 13, color: 'var(--muted)' }}>{r.cost} pts</div>
+
+                <div style={{ fontSize: 13, color: 'var(--muted)' }}>
+                  {r.cost} pts
+                </div>
               </div>
+
               <button
-                style={{ ...smallBtn, opacity: points < r.cost || redeemed.includes(r.id) ? 0.5 : 1 }}
+                style={{
+                  ...smallBtn,
+                  opacity: points < r.cost || redeemed.includes(r.id) ? 0.5 : 1
+                }}
                 disabled={points < r.cost || redeemed.includes(r.id)}
                 onClick={() => redeem(r)}
               >
@@ -160,16 +374,42 @@ export default function MainApp({ onSignOut }) {
         </div>
       </>
     )
+
   } else {
     content = (
       <>
         <Header title="Ghala" sub="ghala@example.com" />
+
         <div style={{ ...card, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-          <div><div style={{ fontSize: 22, color: 'var(--green)' }}>{score}</div><div style={{ fontSize: 12 }}>Score</div></div>
-          <div><div style={{ fontSize: 22, color: 'var(--green)' }}>{points}</div><div style={{ fontSize: 12 }}>Points</div></div>
-          <div><div style={{ fontSize: 22, color: 'var(--green)' }}>{done}</div><div style={{ fontSize: 12 }}>Done</div></div>
+          <div>
+            <div style={{ fontSize: 22, color: 'var(--green)' }}>
+              {score}
+            </div>
+            <div style={{ fontSize: 12 }}>Score</div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 22, color: 'var(--green)' }}>
+              {points}
+            </div>
+            <div style={{ fontSize: 12 }}>Points</div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 22, color: 'var(--green)' }}>
+              {done}
+            </div>
+            <div style={{ fontSize: 12 }}>Done</div>
+          </div>
         </div>
-        <button className="btn btn-light" style={{ marginTop: 14 }} onClick={onSignOut}>Sign out</button>
+
+        <button
+          className="btn btn-light"
+          style={{ marginTop: 14 }}
+          onClick={onSignOut}
+        >
+          Sign out
+        </button>
       </>
     )
   }
@@ -177,12 +417,31 @@ export default function MainApp({ onSignOut }) {
   return (
     <div style={{ padding: '24px 20px 96px' }}>
       {content}
-      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 420, display: 'flex', background: 'var(--card)', borderTop: '1px solid var(--border)' }}>
+
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        maxWidth: 420,
+        display: 'flex',
+        background: 'var(--card)',
+        borderTop: '1px solid var(--border)'
+      }}>
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{ flex: 1, minHeight: 56, border: 'none', background: 'none', cursor: 'pointer', color: tab === t.id ? 'var(--green)' : 'var(--muted)', fontWeight: tab === t.id ? 700 : 400 }}
+            style={{
+              flex: 1,
+              minHeight: 56,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              color: tab === t.id ? 'var(--green)' : 'var(--muted)',
+              fontWeight: tab === t.id ? 700 : 400
+            }}
           >
             <div style={{ fontSize: 18 }}>{t.icon}</div>
             <div style={{ fontSize: 11 }}>{t.label}</div>
