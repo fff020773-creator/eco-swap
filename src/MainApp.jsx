@@ -199,7 +199,7 @@ export default function MainApp({ onSignOut, logFriction, userName, userEmail })
   } else if (tab === 'home') {
     content = (
       <>
-        <Header title={`Hello, ${firstName}`} sub="Small steps, big impact" />
+        <Header title={`Hello, ${firstName} 👋`} sub="Small steps, big impact" />
         <HomeScreen
           score={score}
           points={points}
