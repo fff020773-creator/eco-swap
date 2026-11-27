@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import AdaptiveSwapForm from '../AdaptiveSwapForm'
+import HomeScreen from './HomeScreen'
+import ChallengesScreen from './ChallengesScreen'
+import InviteFriends from './InviteFriends'
+import ImpactScreen from './ImpactScreen'
 
 const CHALLENGES = [
-  { id: 1, icon: '♻️', title: 'No Plastic Day', desc: 'Avoid single-use plastic today', pts: 120 },
-  { id: 2, icon: '💡', title: 'Save Energy', desc: 'Switch off unused lights and devices', pts: 100 },
-  { id: 3, icon: '🚿', title: 'Shorter Shower', desc: 'Keep your shower under 5 minutes', pts: 80 },
-  { id: 4, icon: '🚌', title: 'Public Transport', desc: 'Skip the car for one trip', pts: 150 },
-  { id: 5, icon: '🥗', title: 'Plant-Based Meal', desc: 'Swap one meal for a plant-based one', pts: 100 },
+  { id: 1, icon: '♻️', title: 'No Plastic Day', desc: 'Avoid single-use plastics', pts: 50 },
+  { id: 2, icon: '💡', title: 'Save Energy', desc: 'Turn off unused lights', pts: 20 },
+  { id: 3, icon: '🚿', title: 'Shorter Shower', desc: 'Save water with a 5-min shower', pts: 30 },
+  { id: 4, icon: '🚌', title: 'Public Transport', desc: 'Choose greener transport', pts: 40 },
+  { id: 5, icon: '🥗', title: 'Plant-Based Meal', desc: 'Try a plant-based meal', pts: 30 },
 ]
 
 const REWARDS = [
@@ -162,65 +166,12 @@ export default function MainApp({ onSignOut, logFriction }) {
   } else if (tab === 'home') {
     content = (
       <>
-        <Header
-          title="Good morning, Ghala"
-          sub="Small steps, big impact"
+        <Header title="Good morning, Ghala" sub="Small steps, big impact" />
+        <HomeScreen
+          score={score}
+          points={points}
+          onChallenge={() => setTab('challenges')}
         />
-
-        <div style={hero}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>
-            YOUR IMPACT SCORE
-          </div>
-
-          <div style={{ fontSize: 40, fontWeight: 700 }}>
-            {score} / 100
-          </div>
-
-          <div style={{ fontSize: 13 }}>
-            {done} challenge(s) completed today
-          </div>
-        </div>
-
-        <div style={{ ...card, marginTop: 14 }}>
-          <div style={{ fontWeight: 600 }}>
-            Today's challenge
-          </div>
-
-          <div style={{ color: 'var(--muted)', fontSize: 14, margin: '4px 0 10px' }}>
-            No Plastic Day · +120 pts
-          </div>
-
-          <button
-            style={smallBtn}
-            onClick={() => setTab('challenges')}
-          >
-            View challenges
-          </button>
-        </div>
-
-        <div style={{ ...card, marginTop: 14 }}>
-          <div style={{ fontWeight: 600 }}>
-            Swap an item
-          </div>
-
-          <p style={{ color: 'var(--muted)', fontSize: 14 }}>
-            Give your unused items a new home.
-          </p>
-
-          <button style={smallBtn} onClick={startSwap}>
-            Create a listing
-          </button>
-        </div>
-
-        <div style={{ ...card, marginTop: 14 }}>
-          <div style={{ fontWeight: 600 }}>
-            Reward points
-          </div>
-
-          <div style={{ fontSize: 24, color: 'var(--green)' }}>
-            {points}
-          </div>
-        </div>
       </>
     )
 
@@ -232,49 +183,25 @@ export default function MainApp({ onSignOut, logFriction }) {
           sub="Choose a challenge and earn points"
         />
 
-        <div style={{ display: 'grid', gap: 10 }}>
-          {CHALLENGES.map((c) => {
-            const s = status[c.id]
-
-            return (
-              <div
-                key={c.id}
-                style={{ ...card, display: 'flex', alignItems: 'center', gap: 12 }}
-              >
-                <div style={{ fontSize: 26 }}>{c.icon}</div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600 }}>{c.title}</div>
-
-                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                    {c.desc} · +{c.pts} pts
-                  </div>
-                </div>
-
-                <button
-                  style={{ ...smallBtn, opacity: s === 'done' ? 0.5 : 1 }}
-                  disabled={s === 'done'}
-                  onClick={() => advance(c)}
-                >
-                  {!s ? 'Start' : s === 'progress' ? 'Complete' : 'Done'}
-                </button>
-              </div>
-            )
-          })}
-        </div>
+        <ChallengesScreen
+          challenges={CHALLENGES}
+          status={status}
+          onAdvance={advance}
+          points={points}
+          onInvite={() => setTab('invite')}
+        />
       </>
     )
 
+  } else if (tab === 'invite') {
+    content = (
+      <InviteFriends
+        onDone={() => setTab('challenges')}
+        onHome={() => setTab('home')}
+      />
+    )
+
   } else if (tab === 'impact') {
-    const bars = [40, 55, 45, 70, 60, 80, score]
-
-    const cats = [
-      ['Food', 70],
-      ['Energy', 55],
-      ['Water', 40],
-      ['Transport', 30]
-    ]
-
     content = (
       <>
         <Header
@@ -282,46 +209,7 @@ export default function MainApp({ onSignOut, logFriction }) {
           sub="See the difference you are making"
         />
 
-        <div style={hero}>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>
-            {score} / 100
-          </div>
-        </div>
-
-        <div style={{ ...card, marginTop: 14, display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
-          {bars.map((h, i) => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                height: h + '%',
-                background: 'var(--green)',
-                borderRadius: 6
-              }}
-            />
-          ))}
-        </div>
-
-        <div style={{ ...card, marginTop: 14 }}>
-          {cats.map(([name, v]) => (
-            <div key={name} style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 13 }}>
-                {name} · {v}%
-              </div>
-
-              <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
-                <div
-                  style={{
-                    width: v + '%',
-                    height: 8,
-                    borderRadius: 6,
-                    background: 'var(--green)'
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ImpactScreen score={score} />
       </>
     )
 
