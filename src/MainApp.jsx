@@ -79,6 +79,17 @@ export default function MainApp({ onSignOut, logFriction, userName, userEmail })
     about: 'Making everyday choices greener',
   })
 
+  // whenever the name / email from sign up or sign in changes, update the profile
+  useEffect(() => {
+    if (userName || userEmail) {
+      setProfile((p) => ({
+        ...p,
+        name: userName || p.name,
+        email: userEmail || p.email,
+      }))
+    }
+  }, [userName, userEmail])
+
   useEffect(() => {
     const el = document.documentElement
     const update = () => setContrast(el.classList.contains('high-contrast-mode'))
