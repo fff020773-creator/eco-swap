@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdaptiveSwapForm from '../AdaptiveSwapForm'
 import HomeScreen from './HomeScreen'
 import ChallengesScreen from './ChallengesScreen'
 import InviteFriends from './InviteFriends'
 import ImpactScreen from './ImpactScreen'
+import { ProfileHome, EditProfile, Achievements, Settings } from './ProfileScreens'
 
 const CHALLENGES = [
   { id: 1, icon: '♻️', title: 'No Plastic Day', desc: 'Avoid single-use plastics', pts: 50 },
@@ -70,9 +71,30 @@ export default function MainApp({ onSignOut, logFriction }) {
   const [redeemed, setRedeemed] = useState([])
   const [listing, setListing] = useState(null)
   const [published, setPublished] = useState(false)
+  const [contrast, setContrast] = useState(false)
+  const [profile, setProfile] = useState({
+    name: 'Ghala Alharbi',
+    email: 'ghala@email.com',
+    location: 'Jeddah, Saudi Arabia',
+    about: 'Making everyday choices greener',
+  })
+
+  useEffect(() => {
+    const el = document.documentElement
+    const update = () => setContrast(el.classList.contains('high-contrast-mode'))
+    update()
+    const observer = new MutationObserver(update)
+    observer.observe(el, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  function toggleContrast() {
+    document.querySelector('.adaptive-hud button')?.click()
+  }
 
   const done = CHALLENGES.filter((c) => status[c.id] === 'done').length
   const score = Math.min(100, 78 + done * 2)
+  const firstName = profile.name.split(' ')[0] || 'friend'
 
   function advance(c) {
     const s = status[c.id]
@@ -166,7 +188,7 @@ export default function MainApp({ onSignOut, logFriction }) {
   } else if (tab === 'home') {
     content = (
       <>
-        <Header title="Good morning, Ghala" sub="Small steps, big impact" />
+        <Header title={`Good morning, ${firstName}`} sub="Small steps, big impact" />
         <HomeScreen
           score={score}
           points={points}
@@ -184,6 +206,27 @@ export default function MainApp({ onSignOut, logFriction }) {
         />
 
         <ChallengesScreen
+          key="challenges"
+          challenges={CHALLENGES}
+          status={status}
+          onAdvance={advance}
+          points={points}
+          onInvite={() => setTab('invite')}
+        />
+      </>
+    )
+
+  } else if (tab === 'friends') {
+    content = (
+      <>
+        <Header
+          title="Friends challenge"
+          sub="Compete with your friends"
+        />
+
+        <ChallengesScreen
+          key="friends"
+          initialTab="Friends"
           challenges={CHALLENGES}
           status={status}
           onAdvance={advance}
@@ -263,44 +306,49 @@ export default function MainApp({ onSignOut, logFriction }) {
       </>
     )
 
+  } else if (tab === 'edit-profile') {
+    content = (
+      <EditProfile
+        profile={profile}
+        onSave={setProfile}
+        onHome={() => setTab('home')}
+      />
+    )
+
+  } else if (tab === 'achievements') {
+    content = (
+      <Achievements
+        onBack={() => setTab('profile')}
+        onHome={() => setTab('home')}
+      />
+    )
+
+  } else if (tab === 'settings') {
+    content = (
+      <Settings
+        onBack={() => setTab('profile')}
+        onHome={() => setTab('home')}
+        highContrast={contrast}
+        onToggleContrast={toggleContrast}
+      />
+    )
+
   } else {
     content = (
-      <>
-        <Header title="Ghala" sub="ghala@example.com" />
-
-        <div style={{ ...card, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-          <div>
-            <div style={{ fontSize: 22, color: 'var(--green)' }}>
-              {score}
-            </div>
-            <div style={{ fontSize: 12 }}>Score</div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: 22, color: 'var(--green)' }}>
-              {points}
-            </div>
-            <div style={{ fontSize: 12 }}>Points</div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: 22, color: 'var(--green)' }}>
-              {done}
-            </div>
-            <div style={{ fontSize: 12 }}>Done</div>
-          </div>
-        </div>
-
-        <button
-          className="btn btn-light"
-          style={{ marginTop: 14 }}
-          onClick={onSignOut}
-        >
-          Sign out
-        </button>
-      </>
+      <ProfileHome
+        profile={profile}
+        score={score}
+        points={points}
+        onNavigate={setTab}
+        onSignOut={onSignOut}
+      />
     )
   }
+
+  const activeTab =
+    ['edit-profile', 'achievements', 'settings'].includes(tab) ? 'profile'
+      : tab === 'friends' || tab === 'invite' ? 'challenges'
+        : tab
 
   return (
     <div style={{ padding: '24px 20px 96px' }}>
@@ -327,8 +375,8 @@ export default function MainApp({ onSignOut, logFriction }) {
               border: 'none',
               background: 'none',
               cursor: 'pointer',
-              color: tab === t.id ? 'var(--green)' : 'var(--muted)',
-              fontWeight: tab === t.id ? 700 : 400
+              color: activeTab === t.id ? 'var(--green)' : 'var(--muted)',
+              fontWeight: activeTab === t.id ? 700 : 400
             }}
           >
             <div style={{ fontSize: 18 }}>{t.icon}</div>

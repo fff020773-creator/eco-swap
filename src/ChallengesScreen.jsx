@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
 const WEEKLY = [
-  { id: 'w1', icon: '🌍', title: 'Zero Waste Week', desc: 'Produce as little trash as you can', pts: 200 },
-  { id: 'w2', icon: '🚶', title: 'Walk 5 Days', desc: 'Walk instead of driving', pts: 150 },
-  { id: 'w3', icon: '🛍️', title: 'Reusable Bags', desc: 'Skip plastic bags all week', pts: 100 },
+  { id: 'w1', icon: '🌍', title: 'Zero Waste Week', desc: 'Produce as little trash as you can', pts: 200, goal: 5 },
+  { id: 'w2', icon: '🚶', title: 'Walk 5 Days', desc: 'Walk instead of driving', pts: 150, goal: 5 },
+  { id: 'w3', icon: '🛍️', title: 'Reusable Bags', desc: 'Skip plastic bags all week', pts: 100, goal: 7 },
 ]
 
 const FRIENDS = [
@@ -21,27 +21,24 @@ const card = {
   padding: 16,
 }
 
+const iconTile = {
+  width: 64,
+  height: 64,
+  borderRadius: 16,
+  background: 'rgba(31, 107, 74, 0.1)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 30,
+  flexShrink: 0,
+}
+
 function ChallengeRow({ item, state, onClick }) {
   const label = !state ? 'Start' : state === 'progress' ? 'Complete' : 'Done'
 
   return (
     <div style={{ ...card, display: 'flex', gap: 14, alignItems: 'center' }}>
-      <div
-        aria-hidden="true"
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: 16,
-          background: 'rgba(31, 107, 74, 0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 30,
-          flexShrink: 0,
-        }}
-      >
-        {item.icon}
-      </div>
+      <div aria-hidden="true" style={iconTile}>{item.icon}</div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 18, fontWeight: 700 }}>{item.title}</div>
@@ -74,15 +71,71 @@ function ChallengeRow({ item, state, onClick }) {
   )
 }
 
-export default function ChallengesScreen({ challenges, status, onAdvance, points = 1240, onInvite }) {
-  const [tab, setTab] = useState('Daily')
-  const [weeklyStatus, setWeeklyStatus] = useState({})
+function WeeklyCard({ item, days, onLog }) {
+  const complete = days >= item.goal
+  const pct = Math.round((days / item.goal) * 100)
 
-  function advanceWeekly(id) {
-    const s = weeklyStatus[id]
-    if (!s) setWeeklyStatus({ ...weeklyStatus, [id]: 'progress' })
-    else if (s === 'progress') setWeeklyStatus({ ...weeklyStatus, [id]: 'done' })
+  return (
+    <div style={card}>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <div aria-hidden="true" style={iconTile}>{item.icon}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{item.title}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 2 }}>{item.desc}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '16px 0 6px', fontSize: 14 }}>
+        <span style={{ color: 'var(--muted)' }}>
+          {days} / {item.goal} days
+        </span>
+        <span style={{ color: 'var(--green)', fontWeight: 700 }}>+{item.pts} pts</span>
+      </div>
+
+      <div
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${item.title} progress`}
+        style={{ height: 12, background: 'var(--border)', borderRadius: 6, overflow: 'hidden' }}
+      >
+        <div style={{ width: `${pct}%`, height: '100%', background: 'var(--green)', borderRadius: 6 }} />
+      </div>
+
+      <button
+        type="button"
+        disabled={complete}
+        onClick={onLog}
+        style={{
+          width: '100%',
+          minHeight: 48,
+          marginTop: 14,
+          border: 'none',
+          borderRadius: 14,
+          fontSize: 16,
+          fontWeight: 600,
+          cursor: complete ? 'default' : 'pointer',
+          background: complete ? 'var(--border)' : 'rgba(31, 107, 74, 0.12)',
+          color: 'var(--green)',
+        }}
+      >
+        {complete ? 'Completed ✓' : 'Log today'}
+      </button>
+    </div>
+  )
+}
+
+export default function ChallengesScreen({ challenges, status, onAdvance, points = 1240, onInvite, initialTab = 'Daily' }) {
+  const [tab, setTab] = useState(initialTab)
+  const [weeklyDays, setWeeklyDays] = useState({})
+
+  function logDay(item) {
+    const n = weeklyDays[item.id] || 0
+    if (n < item.goal) setWeeklyDays({ ...weeklyDays, [item.id]: n + 1 })
   }
+
+  const weeklyDone = WEEKLY.filter((w) => (weeklyDays[w.id] || 0) >= w.goal).length
 
   const leaders = FRIENDS.map((f) => (f.you ? { ...f, pts: points } : f)).sort((a, b) => b.pts - a.pts)
   const myRank = leaders.findIndex((l) => l.you) + 1
@@ -125,10 +178,21 @@ export default function ChallengesScreen({ challenges, status, onAdvance, points
       )}
 
       {tab === 'Weekly' && (
-        <div style={{ display: 'grid', gap: 12 }}>
-          {WEEKLY.map((c) => (
-            <ChallengeRow key={c.id} item={c} state={weeklyStatus[c.id]} onClick={() => advanceWeekly(c.id)} />
-          ))}
+        <div>
+          <div style={{ background: 'var(--green)', color: '#fff', borderRadius: 24, padding: '20px 22px', marginBottom: 14 }}>
+            <div style={{ fontSize: 13, letterSpacing: 1, opacity: 0.9 }}>WEEKLY GOALS</div>
+            <div style={{ marginTop: 8 }}>
+              <span style={{ fontSize: 44, fontWeight: 700 }}>{weeklyDone}</span>
+              <span style={{ fontSize: 20, opacity: 0.9 }}> / {WEEKLY.length} completed</span>
+            </div>
+            <div style={{ fontSize: 15, marginTop: 4 }}>Small daily steps add up over the week.</div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 12 }}>
+            {WEEKLY.map((w) => (
+              <WeeklyCard key={w.id} item={w} days={weeklyDays[w.id] || 0} onLog={() => logDay(w)} />
+            ))}
+          </div>
         </div>
       )}
 
