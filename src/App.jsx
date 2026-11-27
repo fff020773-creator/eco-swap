@@ -10,9 +10,8 @@ function Screen({ children }) {
   )
 }
 
-function Field({ label, type = 'text', placeholder }) {
+function Field({ label, type = 'text', placeholder, value, onChange, error }) {
   const englishOnly = type === 'email' || type === 'password'
-  const [value, setValue] = useState('')
   const [warn, setWarn] = useState(false)
 
   function handleChange(e) {
@@ -20,9 +19,9 @@ function Field({ label, type = 'text', placeholder }) {
     if (englishOnly) {
       const clean = raw.replace(/[^\x20-\x7E]/g, '')
       setWarn(clean !== raw)
-      setValue(clean)
+      onChange(clean)
     } else {
-      setValue(raw)
+      onChange(raw)
     }
   }
 
@@ -35,11 +34,27 @@ function Field({ label, type = 'text', placeholder }) {
         onChange={handleChange}
         dir={englishOnly ? 'ltr' : undefined}
         placeholder={placeholder}
-        style={{ display: 'block', width: '100%', minHeight: 48, marginTop: 6, padding: '0 14px', border: '1px solid var(--border)', borderRadius: 12, fontSize: 16, background: 'var(--card)' }}
+        aria-invalid={error ? 'true' : 'false'}
+        style={{
+          display: 'block',
+          width: '100%',
+          minHeight: 48,
+          marginTop: 6,
+          padding: '0 14px',
+          border: error ? '2px solid #d93025' : '1px solid var(--border)',
+          borderRadius: 12,
+          fontSize: 16,
+          background: 'var(--card)',
+        }}
       />
       {warn && (
-        <span role="alert" style={{ color: '#b3261e', fontSize: 12 }}>
+        <span role="alert" style={{ display: 'block', color: '#b3261e', fontSize: 12, marginTop: 4 }}>
           English characters only
+        </span>
+      )}
+      {error && (
+        <span role="alert" style={{ display: 'block', color: '#d93025', fontSize: 13, marginTop: 4, letterSpacing: 0 }}>
+          ⚠ {error}
         </span>
       )}
     </label>
@@ -54,8 +69,44 @@ function Link({ onClick, children }) {
   )
 }
 
+function FormAlert({ children }) {
+  if (!children) return null
+  return (
+    <div
+      role="alert"
+      style={{
+        border: '2px solid #d93025',
+        borderRadius: 12,
+        padding: '10px 14px',
+        color: '#d93025',
+        background: 'var(--card)',
+        fontSize: 14,
+        fontWeight: 600,
+      }}
+    >
+      ⚠ {children}
+    </div>
+  )
+}
+
+const REQUIRED = 'This field is required.'
+
+function nameFromEmail(email) {
+  const local = email.split('@')[0].replace(/[^a-zA-Z]+/g, ' ').trim().split(' ')[0]
+  if (!local) return 'Friend'
+  return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase()
+}
+
+const validEmail = (e) => /^\S+@\S+\.\S+$/.test(e)
+
 export default function App() {
   const [screen, setScreen] = useState('welcome')
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
+  const [resetSent, setResetSent] = useState(false)
 
   const {
     highContrast,
@@ -75,6 +126,40 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [screen, logFriction])
 
+  function goTo(next) {
+    setErrors({})
+    setFormError('')
+    setResetSent(false)
+    setScreen(next)
+  }
+
+  function clearError(key) {
+    setErrors((prev) => ({ ...prev, [key]: undefined }))
+    setFormError('')
+  }
+
+  // returns true when the form is OK, otherwise shows the errors
+  function validate(fields, message) {
+    const found = {}
+    if (fields.includes('name') && !fullName.trim()) found.name = REQUIRED
+    if (fields.includes('email')) {
+      if (!email.trim()) found.email = REQUIRED
+      else if (!validEmail(email.trim())) found.email = 'Please enter a valid email address.'
+    }
+    if (fields.includes('password') && !password) found.password = REQUIRED
+
+    setErrors(found)
+    if (Object.keys(found).length > 0) {
+      setFormError(message)
+      logFriction(`Form validation error on "${screen}" screen: ${Object.keys(found).join(', ')}`, 0)
+      return false
+    }
+    setFormError('')
+    return true
+  }
+
+  const displayName = fullName.trim() || nameFromEmail(email)
+
   const hud = (
     <div className="adaptive-hud" role="region" aria-label="Adaptive UX Controls">
       <span>Friction Logs: {frictionLog.length}</span>
@@ -92,8 +177,10 @@ export default function App() {
     return (
       <>
         <MainApp
-          onSignOut={() => setScreen('welcome')}
+          onSignOut={() => goTo('welcome')}
           logFriction={logFriction}
+          userName={displayName}
+          userEmail={email}
         />
         {hud}
       </>
@@ -122,14 +209,14 @@ export default function App() {
 
           <button
             className="btn"
-            onClick={() => setScreen('create')}
+            onClick={() => goTo('create')}
           >
             Create account
           </button>
 
           <button
             className="btn btn-light"
-            onClick={() => setScreen('signin')}
+            onClick={() => goTo('signin')}
           >
             I already have an account
           </button>
@@ -164,26 +251,38 @@ export default function App() {
             label="EMAIL ADDRESS"
             type="email"
             placeholder="you@example.com"
+            value={email}
+            onChange={(v) => { setEmail(v); clearError('email') }}
+            error={errors.email}
           />
 
           <Field
             label="PASSWORD"
             type="password"
             placeholder="Enter your password"
+            value={password}
+            onChange={(v) => { setPassword(v); clearError('password') }}
+            error={errors.password}
           />
 
-          <Link onClick={() => setScreen('forgot')}>
+          <Link onClick={() => goTo('forgot')}>
             Forgot password?
           </Link>
 
+          <FormAlert>{formError}</FormAlert>
+
           <button
             className="btn"
-            onClick={() => setScreen('app')}
+            onClick={() => {
+              if (validate(['email', 'password'], 'Please enter your email and password.')) {
+                goTo('app')
+              }
+            }}
           >
             Sign in
           </button>
 
-          <Link onClick={() => setScreen('create')}>
+          <Link onClick={() => goTo('create')}>
             Don't have an account? Create one
           </Link>
         </Screen>
@@ -212,28 +311,43 @@ export default function App() {
           <Field
             label="FULL NAME"
             placeholder="Your name"
+            value={fullName}
+            onChange={(v) => { setFullName(v); clearError('name') }}
+            error={errors.name}
           />
 
           <Field
             label="EMAIL ADDRESS"
             type="email"
             placeholder="you@example.com"
+            value={email}
+            onChange={(v) => { setEmail(v); clearError('email') }}
+            error={errors.email}
           />
 
           <Field
             label="PASSWORD"
             type="password"
             placeholder="Create a password"
+            value={password}
+            onChange={(v) => { setPassword(v); clearError('password') }}
+            error={errors.password}
           />
+
+          <FormAlert>{formError}</FormAlert>
 
           <button
             className="btn"
-            onClick={() => setScreen('app')}
+            onClick={() => {
+              if (validate(['name', 'email', 'password'], 'Please fill in all required fields.')) {
+                goTo('app')
+              }
+            }}
           >
             Create account
           </button>
 
-          <Link onClick={() => setScreen('signin')}>
+          <Link onClick={() => goTo('signin')}>
             Already have an account? Sign in
           </Link>
 
@@ -250,7 +364,7 @@ export default function App() {
   return (
     <>
       <Screen>
-        <Link onClick={() => setScreen('signin')}>
+        <Link onClick={() => goTo('signin')}>
           ← Back to sign in
         </Link>
 
@@ -266,9 +380,30 @@ export default function App() {
           label="EMAIL ADDRESS"
           type="email"
           placeholder="you@example.com"
+          value={email}
+          onChange={(v) => { setEmail(v); clearError('email'); setResetSent(false) }}
+          error={errors.email}
         />
 
-        <button className="btn">
+        <FormAlert>{formError}</FormAlert>
+
+        {resetSent && (
+          <div
+            role="status"
+            style={{ border: '2px solid var(--green)', borderRadius: 12, padding: '10px 14px', color: 'var(--green)', fontWeight: 600 }}
+          >
+            Reset link sent ✓ Check your email.
+          </div>
+        )}
+
+        <button
+          className="btn"
+          onClick={() => {
+            if (validate(['email'], 'Please enter your email address.')) {
+              setResetSent(true)
+            }
+          }}
+        >
           Send reset link
         </button>
 

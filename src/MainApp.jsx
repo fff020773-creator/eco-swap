@@ -64,7 +64,7 @@ function Header({ title, sub }) {
   )
 }
 
-export default function MainApp({ onSignOut, logFriction }) {
+export default function MainApp({ onSignOut, logFriction, userName, userEmail }) {
   const [tab, setTab] = useState('home')
   const [status, setStatus] = useState({})
   const [points, setPoints] = useState(1240)
@@ -73,8 +73,8 @@ export default function MainApp({ onSignOut, logFriction }) {
   const [published, setPublished] = useState(false)
   const [contrast, setContrast] = useState(false)
   const [profile, setProfile] = useState({
-    name: 'Ghala Alharbi',
-    email: 'ghala@email.com',
+    name: userName || 'Ghala Alharbi',
+    email: userEmail || 'ghala@email.com',
     location: 'Jeddah, Saudi Arabia',
     about: 'Making everyday choices greener',
   })
